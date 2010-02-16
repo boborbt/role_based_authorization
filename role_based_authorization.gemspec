@@ -13,12 +13,12 @@ Gem::Specification.new do |s|
   s.description = %q{Provides a simple DSL for specifying the authorization logic of your application. Install the gem, add a role attribute to your user model and your almost ready to go.}
   s.email = %q{boborbt@gmail.com}
   s.extra_rdoc_files = [
-    "README"
+    "README.rdoc"
   ]
   s.files = [
     ".gitignore",
      "MIT-LICENSE",
-     "README",
+     "README.rdoc",
      "Rakefile",
      "VERSION",
      "lib/role_based_authorization.rb",

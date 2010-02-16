@@ -55,16 +55,12 @@ module RoleBasedAuthorization
     def permit options 
       options[:controller] ||= controller_name
       controller = options[:controller]
-      role_auth_rules[controller] ||= {}
+      actions    = [*options[:actions]]  # create an array if options[:actions] is not already an array
       
-      if options[:actions] == :all
-        role_auth_rules[controller][:all] ||= []
-        role_auth_rules[controller][:all] << RoleBasedAuthorization::Rule.new(options[:to], options[:if], options[:object_id])
-        return
-      end
-    
-      options[:actions].each do |action|
-        action = action.to_s  # this allows for both symbols and strings to be used for action names
+      role_auth_rules[controller] ||= {}      
+      
+      actions.each do |action|
+        action = action.to_sym  # this allows for both symbols and strings to be used for action names
         role_auth_rules[controller][action] ||= []
         role_auth_rules[controller][action] << RoleBasedAuthorization::Rule.new(options[:to], options[:if], options[:object_id])
       end
@@ -153,8 +149,8 @@ module RoleBasedAuthorization
     
       [:all, opts[:action]].each do |action|
         AUTHORIZATION_LOGGER.debug('current action: %s' % [action])
-        
-        raise "Action should be a string -- not a #{action.class.name}!" if action!=:all && action.class!=String
+        action = action.to_sym
+        raise "Action should be a symbol -- not a #{action.class.name}!" if action!=:all && action.class!=Symbol
         
         next if rules[controller].nil? || rules[controller][action].nil?            
         if rules[controller][action].find { |rule| rule.match(opts[:user], opts[:ids]) }

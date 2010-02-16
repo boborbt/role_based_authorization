@@ -21,6 +21,10 @@ class DummyController < ActionController::Base
   
   permit  :actions => 'very_low_security',
           :to => :all
+
+  permit  :actions => :very_low_security_symbol_version,
+          :to => :all
+
           
   permit :actions => 'high_security',
          :to => 3
@@ -54,6 +58,20 @@ class RoleBasedAuthorizationTest < ActiveSupport::TestCase
   test "Should permit action very_low_security to everyone" do
     assert_equal true, @controller.authorize_action?(:action => 'very_low_security')
   end
+
+  test "Should permit action very_low_security to everyone even if it is given as a symbol" do
+    assert_equal true, @controller.authorize_action?(:action => :very_low_security)
+  end
+  
+  test "Should permit action very_low_security_symbol_version to everyone" do
+    assert_equal true, @controller.authorize_action?(:action => :very_low_security_symbol_version)    
+  end
+
+
+  test "Should permit action very_low_security_symbol_version to everyone even if it is given as a string" do
+    assert_equal true, @controller.authorize_action?(:action => 'very_low_security_symbol_version')    
+  end
+
   
   test "Should permit action high_security only to root (role 3)" do
     assert_equal false, @controller.authorize_action?(:action => 'high_security')

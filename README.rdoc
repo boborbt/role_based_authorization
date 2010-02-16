@@ -4,8 +4,7 @@
 This library provide a very simple authorization system. It should work fine with
 most of the authentication plugins (and gems) out there, even though little testing
 has been done in this regard. There are a lot of similar plugin/gems and probably
-this is not better than any others (see http://steffenbartsch.com/blog/2008/08/rails-authorization-plugins/
- for a nice review).
+this is not better than any others (see http://steffenbartsch.com/blog/2008/08/rails-authorization-plugins/ for a nice review).
 
 Installation:
 * install the role_based_authorization by issuing:

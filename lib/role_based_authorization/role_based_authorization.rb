@@ -112,37 +112,39 @@ module RoleBasedAuthorization
   # :user, :controller, :action:: self explanatory
   # :ids:: id to be used to retrieve relevant objects
   def authorize_action? opts = {}  
-    if defined?(logged_in?) && !logged_in?
+    if respond_to?(:logged_in?) && !logged_in?
       AUTHORIZATION_LOGGER.info("returning false (not logged in)")
       return false
     end
     
-    opts[:ids] ||= {}
-    opts[:ids].reverse_merge!( opts.reject { |k,v| k.to_s !~ /(_id\Z)|(\Aid\Z)/ } )
+    user, ids, controller, action = *opts.values_at(:user, :ids, :controller, :action)
     
-    if opts[:user].nil? && defined?(current_user)
-      opts[:user] = current_user
+    ids ||= {}
+    ids.reverse_merge!( opts.reject { |key,value| key.to_s !~ /(_id\Z)|(\Aid\Z)/ } )
+    
+    if user.nil? && respond_to?(:current_user)
+      user = current_user
     end
     
-    if opts[:controller].nil? && defined?(controller_name)
-      opts[:controller] = controller_name
+    if controller.nil? && respond_to?(:controller_name)
+      controller = controller_name
     end
 
     AUTHORIZATION_LOGGER.info("user %s requested access to method %s:%s using ids:%s" %
-        [ opts[:user] && opts[:user].description + "(id:#{opts[:user].id} role:#{opts[:user].role})" || 'none',
-          opts[:controller],
-          opts[:action],
-          opts[:ids].inspect])
+        [ user && user.description + "(id:#{user.id} role:#{user.role})" || 'none',
+          controller,
+          action,
+          ids.inspect])
     
     rules = self.class.role_auth_rules
     AUTHORIZATION_LOGGER.debug("current set of rules: %s" % [rules.inspect])
 
-    ([opts[:controller]] | ['application']).each do |controller|    
-      if( !controller.blank? && rules[controller].nil? )
+    ([controller] | ['application']).each do |current_controller|    
+      if( !current_controller.blank? && rules[current_controller].nil? )
         # tries to load the controller. Rails automagically loads classes if their name
         # is used anywhere. By trying to constantize the name of the controller, we
         # force rails to load it.
-        controller_klass = (controller.to_s+'_controller').camelize.constantize
+        controller_klass = (current_controller.to_s+'_controller').camelize.constantize
       end
     
       AUTHORIZATION_LOGGER.debug("current controller: %s" % [controller])
@@ -150,10 +152,12 @@ module RoleBasedAuthorization
       [:all, opts[:action]].each do |action|
         AUTHORIZATION_LOGGER.debug('current action: %s' % [action])
         action = action.to_sym
-        raise "Action should be a symbol -- not a #{action.class.name}!" if action!=:all && action.class!=Symbol
+        action_class = action.class
         
-        next if rules[controller].nil? || rules[controller][action].nil?            
-        if rules[controller][action].find { |rule| rule.match(opts[:user], opts[:ids]) }
+        raise "Action should be a symbol -- not a #{action_class.name}!" if action_class != Symbol
+        
+        rules_for_this_action = rules[controller] && rules[controller][action]
+        if rules_for_this_action != nil && rules_for_this_action.find { |rule| rule.match(user, ids) }
           AUTHORIZATION_LOGGER.info('returning true (access granted)')
           return true
         end 
@@ -205,7 +209,7 @@ module RoleBasedAuthorization
   def authorized?
     authorize_action?     :controller => controller_name,  
                           :action => action_name, 
-                          :ids => params.reject { |k,v| k.to_s !~ /(_id\Z)|(\Aid\Z)/ }, 
+                          :ids => params.reject { |key,value| key.to_s !~ /(_id\Z)|(\Aid\Z)/ }, 
                           :user => current_user
   end
 end

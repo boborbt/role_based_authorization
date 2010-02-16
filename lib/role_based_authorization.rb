@@ -1,0 +1,2 @@
+require 'role_based_authorization/authorization_logger.rb'
+require 'role_based_authorization/role_based_authorization.rb'

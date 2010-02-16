@@ -105,6 +105,10 @@ class RoleBasedAuthorizationTest < ActiveSupport::TestCase
       assert true
     }
   end
+  
+  test "helper_method should work with resource paths even when prefixed with the ActionController::Base.relative_url_root" do
+    assert false
+  end
 
   
 end

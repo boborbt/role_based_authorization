@@ -1,15 +1,20 @@
 = RoleBasedAuthorization 
 
 
-This plugin provide a very simple authorization system. It should work fine with
+This library provide a very simple authorization system. It should work fine with
 most of the authentication plugins (and gems) out there, even though little testing
 has been done in this regard. There are a lot of similar plugin/gems and probably
-this is not better than any others (see for instance the)
+this is not better than any others (see http://steffenbartsch.com/blog/2008/08/rails-authorization-plugins/
+ for a nice review).
 
 Installation:
-* install the plugin using:
-		---
-		---
+* install the role_based_authorization by issuing:
+	gem install role_based_authorization
+  or by adding
+    config.gem "role_based_authorization"
+  to your rails config file and then running 'rake gems:install'
+
+  
 * in your application controller: include the module RoleBasedAuthorization:
 
 	class ApplicationController < ActionController::Base
@@ -26,7 +31,7 @@ The inclusion of RoleBasedAuthorization serves three purposes: it allows subclas
 == Requirements
 
 
-The plugin poses few and very reasonable constraints on your application. Namely, it requires:
+The library poses few and very reasonable constraints on your application. Namely, it requires:
 
 
 * that your controllers provide a 'current_user' method 
@@ -39,7 +44,7 @@ The plugin poses few and very reasonable constraints on your application. Namely
 
 You can specify your authorization logic by adding a number of 'permit' calls to your controllers. Permissions granted in a controller apply to all its subclasses. Since usually all controllers inherit from the application controller, this allows one to authorize all actions for the 'admin' role by telling it so in the application controller.
 
-An important thing to keep in mind is that the plugin assumes that EVERYTHING IS FORBIDDEN unless otherwise specified. Then, if you do not specify any permission rule, you will end up with a very secure (though useless) application.
+An important thing to keep in mind is that role_based_authorization assumes that EVERYTHING IS FORBIDDEN unless otherwise specified. Then, if you do not specify any permission rule, you will end up with a very secure (though useless) application.
 
 The permission statement takes the form:
 
@@ -71,7 +76,7 @@ permit options:
 
 == authorized?
 
-The plugin adds an authorized? method to your application controller. The method returns false if one of the following conditions occur:
+The library adds an authorized? method to your application controller. The method returns false if one of the following conditions occur:
 * your controller defines a logged_in? method and the method returns false
 * no permit rule matches the current settings
 	

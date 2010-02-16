@@ -107,65 +107,73 @@ module RoleBasedAuthorization
       str
     end
   end
+  
+  
+  # Returns true if one of the rules defined for this controller matches
+  # the given options
+  def exist_rule_matching_options? user, controllers, actions, ids
+    rules = self.class.role_auth_rules
+    AUTHORIZATION_LOGGER.debug("current set of rules: %s" % [rules.inspect])
+    
+    
+    controllers.each do |controller|    
+      if( !controller.blank? && rules[controller].nil? )
+        # tries to load the controller. Rails automagically loads classes if their name
+        # is used anywhere. By trying to constantize the name of the controller, we
+        # force rails to load it.
+        controller_klass = (controller.to_s+'_controller').camelize.constantize
+      end
+    
+      AUTHORIZATION_LOGGER.debug("current controller: %s" % [controller])
+    
+      actions.each do |action|
+        AUTHORIZATION_LOGGER.debug('current action: %s' % [action])
+        
+        action = action.to_sym
+        action_class = action.class
+        raise "Action should be a symbol -- not a #{action_class.name}!" if action_class != Symbol
+        
+        rules_for_this_action = rules[controller] && rules[controller][action]
+        next if rules_for_this_action.nil?
+        
+        return true if rules_for_this_action.find { |rule| rule.match(user, ids) }
+      end
+    end
+    
+    return false
+  end
     
   # Main authorization logic. opts is an hash with the following keys
   # :user, :controller, :action:: self explanatory
   # :ids:: id to be used to retrieve relevant objects
   def authorize_action? opts = {}  
+    # Option handling
+    user, ids, controller, action = *opts.values_at(:user, :ids, :controller, :action)
+
     if respond_to?(:logged_in?) && !logged_in?
       AUTHORIZATION_LOGGER.info("returning false (not logged in)")
       return false
     end
-    
-    user, ids, controller, action = *opts.values_at(:user, :ids, :controller, :action)
-    
+        
     ids ||= {}
     ids.reverse_merge!( opts.reject { |key,value| key.to_s !~ /(_id\Z)|(\Aid\Z)/ } )
     
-    if user.nil? && respond_to?(:current_user)
-      user = current_user
-    end
+    user = current_user           if user.nil?        && respond_to?(:current_user)
+    controller = controller_name  if controller.nil?  && respond_to?(:controller_name)
     
-    if controller.nil? && respond_to?(:controller_name)
-      controller = controller_name
-    end
-
     AUTHORIZATION_LOGGER.info("user %s requested access to method %s:%s using ids:%s" %
         [ user && user.description + "(id:#{user.id} role:#{user.role})" || 'none',
           controller,
           action,
           ids.inspect])
     
-    rules = self.class.role_auth_rules
-    AUTHORIZATION_LOGGER.debug("current set of rules: %s" % [rules.inspect])
-
-    ([controller] | ['application']).each do |current_controller|    
-      if( !current_controller.blank? && rules[current_controller].nil? )
-        # tries to load the controller. Rails automagically loads classes if their name
-        # is used anywhere. By trying to constantize the name of the controller, we
-        # force rails to load it.
-        controller_klass = (current_controller.to_s+'_controller').camelize.constantize
-      end
-    
-      AUTHORIZATION_LOGGER.debug("current controller: %s" % [controller])
-    
-      [:all, opts[:action]].each do |action|
-        AUTHORIZATION_LOGGER.debug('current action: %s' % [action])
-        action = action.to_sym
-        action_class = action.class
-        
-        raise "Action should be a symbol -- not a #{action_class.name}!" if action_class != Symbol
-        
-        rules_for_this_action = rules[controller] && rules[controller][action]
-        if rules_for_this_action != nil && rules_for_this_action.find { |rule| rule.match(user, ids) }
-          AUTHORIZATION_LOGGER.info('returning true (access granted)')
-          return true
-        end 
-      end
+    if exist_rule_matching_options?( user, [controller,'application'], [:all,action] , ids )
+      AUTHORIZATION_LOGGER.info('returning true (access granted)')
+      return true 
+    else      
+      AUTHORIZATION_LOGGER.info('returning false (access denied)')
+      return false
     end
-    
-    AUTHORIZATION_LOGGER.info('returning false (access denied)')
-    return false
   end
   
   

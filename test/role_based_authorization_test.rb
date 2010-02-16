@@ -8,7 +8,6 @@ class DummyUser
   def login()               return 'test'  end  
   def role()                return  @role end
   def role=(new_role)       @role = new_role end
-  def description()         return "user" end
 end
 
 class DummyController < ActionController::Base

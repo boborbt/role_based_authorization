@@ -36,7 +36,6 @@ The library poses few and very reasonable constraints on your application. Namel
 * that your controllers provide a 'current_user' method 
 * that the user object (returned by the 'current_user' method)  implements the following two methods:
   * role: returning the role of the current user; roles can be anything (I personally use integers). This is usually implemented by adding a 'role' column to your model.
-  * description: used for logging purposes
 
 == Permission statements
 

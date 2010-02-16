@@ -162,7 +162,7 @@ module RoleBasedAuthorization
     controller = controller_name  if controller.nil?  && respond_to?(:controller_name)
     
     AUTHORIZATION_LOGGER.info("user %s requested access to method %s:%s using ids:%s" %
-        [ user && user.description + "(id:#{user.id} role:#{user.role})" || 'none',
+        [ user && user.inspect + "(id:#{user.id} role:#{user.role})" || 'none',
           controller,
           action,
           ids.inspect])

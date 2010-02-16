@@ -15,11 +15,29 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = [
     "README"
   ]
+  s.files = [
+    ".gitignore",
+     "MIT-LICENSE",
+     "README",
+     "Rakefile",
+     "VERSION",
+     "lib/role_based_authorization.rb",
+     "lib/role_based_authorization/authorization_logger.rb",
+     "lib/role_based_authorization/role_based_authorization.rb",
+     "rails/init.rb",
+     "role_based_authorization.gemspec",
+     "test/role_based_authorization_test.rb",
+     "test/test_helper.rb"
+  ]
   s.homepage = %q{http://github.com/boborbt/role_based_authorization}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.3.5}
   s.summary = %q{Basic authorization module for rails}
+  s.test_files = [
+    "test/role_based_authorization_test.rb",
+     "test/test_helper.rb"
+  ]
 
   if s.respond_to? :specification_version then
     current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION

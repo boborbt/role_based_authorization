@@ -89,7 +89,7 @@ module RoleBasedAuthorization
       matching = @roles.include?(:all)
       
       # checking for right role (no need to check them if already matching)
-      matching = !@roles.find { |role| role == user.role }.nil? if !matching
+      matching = !@roles.find { |role| !user.nil? && role == user.role }.nil? if !matching
       
       if @cond.nil?
         return matching
@@ -149,6 +149,7 @@ module RoleBasedAuthorization
   def authorize_action? opts = {}  
     # Option handling
     user, ids, controller, action = *opts.values_at(:user, :ids, :controller, :action)
+    user ||= current_user
 
     if respond_to?(:logged_in?) && !logged_in?
       AUTHORIZATION_LOGGER.info("returning false (not logged in)")
@@ -162,7 +163,7 @@ module RoleBasedAuthorization
     controller = controller_name  if controller.nil?  && respond_to?(:controller_name)
     
     AUTHORIZATION_LOGGER.info("user %s requested access to method %s:%s using ids:%s" %
-        [ user && user.inspect + "(id:#{user.id} role:#{user.role})" || 'none',
+        [ user && (user.inspect + "(id:#{user.id} role:#{user.role})") || 'none',
           controller,
           action,
           ids.inspect])
@@ -217,7 +218,6 @@ module RoleBasedAuthorization
   def authorized?
     authorize_action?     :controller => controller_name,  
                           :action => action_name, 
-                          :ids => params.reject { |key,value| key.to_s !~ /(_id\Z)|(\Aid\Z)/ }, 
-                          :user => current_user
+                          :ids => params.reject { |key,value| key.to_s !~ /(_id\Z)|(\Aid\Z)/ }
   end
 end

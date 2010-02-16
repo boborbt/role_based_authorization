@@ -98,6 +98,13 @@ class RoleBasedAuthorizationTest < ActiveSupport::TestCase
     assert_equal true, @controller.authorize_action?(:action => 'low_security_with_param_identified_by_other_id', 
                                                      :other_id => 'object_id')
   end  
+  
+  
+  test "helper method should work" do 
+    @controller.if_authorized?(:action => 'very_low_security') {
+      assert true
+    }
+  end
 
   
 end

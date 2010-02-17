@@ -15,6 +15,33 @@ module RoleBasedAuthorization
      helper_method :if_authorized?
    end
   end
+  
+  # Returns true if one of the given rules  matches the
+  # given options. rules must be an hash with a list of rules for
+  # each action
+  def RoleBasedAuthorization.find_matching_rule rules, options
+    user,actions,ids = *options.values_at(:user, :actions, :ids)
+
+    return actions.find do |action|
+      AUTHORIZATION_LOGGER.debug('current action: %s' % [action])      
+      action = action.to_sym
+      rules_for_action = rules[action]
+      rules_for_action && rules_for_action.find { |rule| rule.match(user, ids) }
+    end
+  end
+  
+  
+  # Returns an hash options amenable to be passed to authorize_action?. It takes either
+  # an option hash, or a path string
+  def RoleBasedAuthorization.cleanup_options(opts)
+    path_cleanup_regexp = %r{(#{ActionController::Base.relative_url_root})?}
+       
+    url_options = (opts.class == String) && ActionController::Routing::Routes.recognize_path(opts.gsub(path_cleanup_regexp,''))
+    url_options ||= opts.dup
+    
+    url_options
+  end
+  
       
   # Returns true if one of the rules defined for this controller matches
   # the given options
@@ -33,7 +60,7 @@ module RoleBasedAuthorization
       (controller.to_s+'_controller').camelize.constantize if( !controller.blank? && rules_for_controller.nil? )
     
 
-      rules_for_controller && self.class.find_matching_rule(rules_for_controller, options)
+      rules_for_controller && RoleBasedAuthorization.find_matching_rule(rules_for_controller, options)
     end
   end
     
@@ -85,12 +112,7 @@ module RoleBasedAuthorization
   #   if_authorized?( edit_item_path ) { |opts| link_to('yyy', opts) }
   
   def if_authorized? opts, &block
-    path_cleanup_regexp = %r{(#{ActionController::Base.relative_url_root})?}
-       
-    url_options = (opts.class == String) && ActionController::Routing::Routes.recognize_path(opts.gsub(path_cleanup_regexp,''))
-    url_options ||= opts.dup
-    
-    block.call(opts) if authorize_action?(url_options)
+    block.call(opts) if authorize_action?(RoleBasedAuthorization.cleanup_options(opts))
   end
   
   # Returns true if the current user is authorized to perform the current action

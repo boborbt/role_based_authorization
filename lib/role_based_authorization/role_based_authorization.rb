@@ -2,7 +2,7 @@
 module RoleBasedAuthorization
   # AuthorizationLogger instance that is used throughout the plugin for logging
   # events.
-  AUTHORIZATION_LOGGER = AuthorizationLogger.new(File.join(RAILS_ROOT,'log','authorization.log'))
+  AUTHORIZATION_LOGGER = AuthorizationLogger.new(File.join(RAILS_ROOT,'log','authorization.log'))  
     
   # Fires when the module is included into the controllers. It adds all class methods
   # defined in the ClassAdditions sub-module and the authorize_action? and if_authorized?
@@ -85,21 +85,12 @@ module RoleBasedAuthorization
   #   if_authorized?( edit_item_path ) { |opts| link_to('yyy', opts) }
   
   def if_authorized? opts, &block
-    cleanup_url_regexp = %r{(#{ActionController::Base.relative_url_root})?}
+    path_cleanup_regexp = %r{(#{ActionController::Base.relative_url_root})?}
+       
+    url_options = (opts.class == String) && ActionController::Routing::Routes.recognize_path(opts.gsub(path_cleanup_regexp,''))
+    url_options ||= opts.dup
     
-    url_options = nil
-    if opts.class == String
-      path = opts
-      
-
-      url_options = ActionController::Routing::Routes.recognize_path(path.gsub(cleanup_url_regexp,''))
-    else
-      url_options = opts.dup
-    end
-    
-    if authorize_action? url_options
-      block.call(opts)
-    end
+    block.call(opts) if authorize_action?(url_options)
   end
   
   # Returns true if the current user is authorized to perform the current action

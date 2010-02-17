@@ -146,28 +146,27 @@ module RoleBasedAuthorization
   # Main authorization logic. opts is an hash with the following keys
   # :user, :controller, :action:: self explanatory
   # :ids:: id to be used to retrieve relevant objects
-  def authorize_action? opts = {}  
-    # Option handling
-    user, ids, controller, action = *opts.values_at(:user, :ids, :controller, :action)
-    user ||= current_user
-
+  def authorize_action? opts = {} 
+    # exiting immediately if not logged in
     if respond_to?(:logged_in?) && !logged_in?
       AUTHORIZATION_LOGGER.info("returning false (not logged in)")
       return false
     end
-        
-    ids ||= {}
+
+    # Option handling
+    user, ids, controller, action = *opts.values_at(:user, :ids, :controller, :action)
+
+    user       ||= current_user
+    controller ||= controller_name
+    ids        ||= {}
     ids.reverse_merge!( opts.reject { |key,value| key.to_s !~ /(_id\Z)|(\Aid\Z)/ } )
-    
-    user = current_user           if user.nil?        && respond_to?(:current_user)
-    controller = controller_name  if controller.nil?  && respond_to?(:controller_name)
     
     AUTHORIZATION_LOGGER.info("user %s requested access to method %s:%s using ids:%s" %
         [ user && (user.inspect + "(id:#{user.id} role:#{user.role})") || 'none',
           controller,
           action,
           ids.inspect])
-    
+
     if exists_rule_matching_options?( user, [controller,'application'], [:all,action] , ids )
       AUTHORIZATION_LOGGER.info('returning true (access granted)')
       return true 

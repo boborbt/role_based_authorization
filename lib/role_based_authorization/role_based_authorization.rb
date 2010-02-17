@@ -3,9 +3,7 @@ module RoleBasedAuthorization
   # AuthorizationLogger instance that is used throughout the plugin for logging
   # events.
   AUTHORIZATION_LOGGER = AuthorizationLogger.new(File.join(RAILS_ROOT,'log','authorization.log'))
-  
-  module ClassMethods; end
-  
+    
   # Fires when the module is included into the controllers. It adds all class methods
   # defined in the ClassAdditions sub-module and the authorize_action? and if_authorized?
   # instance methods.
@@ -17,39 +15,44 @@ module RoleBasedAuthorization
      helper_method :if_authorized?
    end
   end
+  
+  # 
+  #
+  def exists_rule_matching_actions? actions, user, ids, rules_for_controller
+    actions.find do |action|
+      AUTHORIZATION_LOGGER.debug('current action: %s' % [action])
+      
+      action = action.to_sym
+      action_class = action.class
+      raise "Action should be a symbol -- not a #{action_class.name}!" if action_class != Symbol
+      
+      rules_for_action = rules_for_controller && rules_for_controller[action]
+      next if rules_for_action.nil?
+      
+      rules_for_action.find { |rule| rule.match(user, ids) }
+    end
+  end
     
   # Returns true if one of the rules defined for this controller matches
   # the given options
   def exists_rule_matching_options? user, controllers, actions, ids
     rules = self.class.role_auth_rules
-    AUTHORIZATION_LOGGER.debug("current set of rules: %s" % [rules.inspect])
     
-    
-    controllers.each do |controller|    
-      if( !controller.blank? && rules[controller].nil? )
-        # tries to load the controller. Rails automagically loads classes if their name
-        # is used anywhere. By trying to constantize the name of the controller, we
-        # force rails to load it.
-        controller_klass = (controller.to_s+'_controller').camelize.constantize
-      end
-    
+    found_matching_rule = controllers.find do |controller|    
       AUTHORIZATION_LOGGER.debug("current controller: %s" % [controller])
+
+      rules_for_controller = rules[controller]
+
+      # tries to load the controller. Rails automagically loads classes if their name
+      # is used anywhere. By trying to constantize the name of the controller, we
+      # force rails to load it. This causes the insertion of the rules defined therein
+      # into the object pointed by rules_for_controller.      
+      (controller.to_s+'_controller').camelize.constantize if( !controller.blank? && rules_for_controller.nil? )
     
-      actions.each do |action|
-        AUTHORIZATION_LOGGER.debug('current action: %s' % [action])
-        
-        action = action.to_sym
-        action_class = action.class
-        raise "Action should be a symbol -- not a #{action_class.name}!" if action_class != Symbol
-        
-        rules_for_this_action = rules[controller] && rules[controller][action]
-        next if rules_for_this_action.nil?
-        
-        return true if rules_for_this_action.find { |rule| rule.match(user, ids) }
-      end
+      exists_rule_matching_actions?(actions, user, ids, rules_for_controller)
     end
     
-    return false
+    return found_matching_rule
   end
     
   # Main authorization logic. opts is an hash with the following keys

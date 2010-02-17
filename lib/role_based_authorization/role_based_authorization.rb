@@ -15,20 +15,7 @@ module RoleBasedAuthorization
      helper_method :if_authorized?
    end
   end
-  
-  # Returns true if one of the rules in rule_for_controller matches the
-  # given options
-  def exists_matching_rule_for_this_controller? rules_for_controller, options
-    user,actions,ids = *options.values_at(:user, :actions, :ids)
-    
-    return actions.find do |action|
-      AUTHORIZATION_LOGGER.debug('current action: %s' % [action])      
-      action = action.to_sym
-      rules_for_action = rules_for_controller[action]
-      rules_for_action && rules_for_action.find { |rule| rule.match(user, ids) }
-    end
-  end
-    
+      
   # Returns true if one of the rules defined for this controller matches
   # the given options
   def exists_matching_rule? options
@@ -46,7 +33,7 @@ module RoleBasedAuthorization
       (controller.to_s+'_controller').camelize.constantize if( !controller.blank? && rules_for_controller.nil? )
     
 
-      rules_for_controller && exists_matching_rule_for_this_controller?(rules_for_controller, options)
+      rules_for_controller && self.class.find_matching_rule(rules_for_controller, options)
     end
   end
     

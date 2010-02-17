@@ -7,6 +7,21 @@ module RoleBasedAuthorization
      @@rules
    end
    
+   # Returns true if one of the given rules  matches the
+   # given options. rules must be an hash with a list of rules for
+   # each action
+   def find_matching_rule rules, options
+     user,actions,ids = *options.values_at(:user, :actions, :ids)
+
+     return actions.find do |action|
+       AUTHORIZATION_LOGGER.debug('current action: %s' % [action])      
+       action = action.to_sym
+       rules_for_action = rules[action]
+       rules_for_action && rules_for_action.find { |rule| rule.match(user, ids) }
+     end
+   end
+   
+   
    # Defines the DSL for the authorization system. The syntax is:
    #   permit  :actions => [list of actions], 
    #       :to  => [list of roles], 

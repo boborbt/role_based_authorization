@@ -18,7 +18,11 @@ module RoleBasedAuthorization
   
   # 
   #
-  def exists_rule_matching_actions? actions, user, ids, rules_for_controller
+  def exists_matching_rule_for_this_controller? rules_for_controller, options
+    user     = options[:user]
+    actions  = options[:actions]
+    ids      = options[:ids]
+    
     actions.find do |action|
       AUTHORIZATION_LOGGER.debug('current action: %s' % [action])
       
@@ -35,10 +39,10 @@ module RoleBasedAuthorization
     
   # Returns true if one of the rules defined for this controller matches
   # the given options
-  def exists_rule_matching_options? user, controllers, actions, ids
+  def exists_matching_rule? options
     rules = self.class.role_auth_rules
     
-    found_matching_rule = controllers.find do |controller|    
+    found_matching_rule = options[:controllers].find do |controller|    
       AUTHORIZATION_LOGGER.debug("current controller: %s" % [controller])
 
       rules_for_controller = rules[controller]
@@ -49,7 +53,7 @@ module RoleBasedAuthorization
       # into the object pointed by rules_for_controller.      
       (controller.to_s+'_controller').camelize.constantize if( !controller.blank? && rules_for_controller.nil? )
     
-      exists_rule_matching_actions?(actions, user, ids, rules_for_controller)
+      exists_matching_rule_for_this_controller?(rules_for_controller, options)
     end
     
     return found_matching_rule
@@ -79,7 +83,7 @@ module RoleBasedAuthorization
           action,
           ids.inspect])
 
-    if exists_rule_matching_options?( user, [controller,'application'], [:all,action] , ids )
+    if exists_matching_rule?( :user => user, :controllers => [controller,'application'], :actions => [:all,action] , :ids => ids )
       AUTHORIZATION_LOGGER.info('returning true (access granted)')
       return true 
     else      

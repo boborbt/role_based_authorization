@@ -10,8 +10,11 @@ class DummyUser
   def role=(new_role)       @role = new_role end
 end
 
-class DummyController < ActionController::Base
-  include RoleBasedAuthorization
+class ApplicationController < ActionController::Base
+  include RoleBasedAuthorization  
+end
+
+class DummyController < ApplicationController
   
   def initialize()          return @user = DummyUser.new end
   def logged_in?()          return true end

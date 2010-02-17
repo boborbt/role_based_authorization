@@ -1,3 +1,4 @@
+
 module RoleBasedAuthorization
   # AuthorizationLogger instance that is used throughout the plugin for logging
   # events.
@@ -6,109 +7,17 @@ module RoleBasedAuthorization
   module ClassMethods; end
   
   # Fires when the module is included into the controllers. It adds all class methods
-  # defined in the ClassMethods sub-module and the authorize_action? and if_authorized?
+  # defined in the ClassAdditions sub-module and the authorize_action? and if_authorized?
   # instance methods.
   def self.included(klass)
-   klass.extend(ClassMethods)
+   klass.extend(ClassAdditions)
    
    klass.class_eval do
      helper_method :authorize_action?
      helper_method :if_authorized?
    end
   end
-
-  # Defines the class methods that are to be added to the application controller
-  module ClassMethods
-    # Returns the set of rules defined on this controller
-    def role_auth_rules
-      @@rules||={}
-      @@rules
-    end
     
-    # Defines the DSL for the authorization system. The syntax is:
-    #   permit  :actions => [list of actions], 
-    #       :to  => [list of roles], 
-    #       :if  => lambda_expression,
-    #       :object_id => object_id_symbol
-    # 
-    # you can add any number of these in anyone of your controller.
-    # 
-    # options:
-    # 
-    # <b>:to</b>::  
-    #   the list of roles interested by this rule. The actual contents of this list depends on what your application defines to be a role. If you use integers, it could be a vector like [1,4] or as [ROOT, ADMIN], where ROOT and ADMIN are symbolic costants containing the corresponding integer values. You can specify all roles by specifying :all in place of the role list.
-    # 
-    # <b>:actions</b>::  
-    #   the list of actions that are permitted to the mentioned roles. Actions are actual method names of the current controller and can be given as symbols or as strings. For instance ['index', 'show'] is equivalent to [:index, :show]. You can grant access to all actions by specifying :all instead of the action list. 
-    # 
-    # <b>:if</b>:: 
-    #   a lambda expression that verifies additional conditions. The lambda expression takes two arguments: the current user and the id of an object. For instance you may want to verify that "normal" users could only modify objects that they own. You can say that by specifying: 
-    #     permit :actions => [:edit, :update], 
-    #       :to => [NORMAL], 
-    #       :if => lambda { |user, obj_id| TheObject.find(obj_id).owner == user }
-    # 
-    # <b>:object_id</b>:: 
-    #   normally the object id passed to the lambda expression of the :if option is retrieved from the params hash using :id (i.e. normally obj_id = params[:id]), you can specify other identifiers using this option, e.g.:
-    #     :object_id => :product_id
-    #   specifies that :product_id should be used instead of :id.
-    
-    def permit options 
-      options[:controller] ||= controller_name
-      controller = options[:controller]
-      actions    = [*options[:actions]]  # create an array if options[:actions] is not already an array
-      
-      role_auth_rules[controller] ||= {}      
-      
-      actions.each do |action|
-        action = action.to_sym  # this allows for both symbols and strings to be used for action names
-        role_auth_rules[controller][action] ||= []
-        role_auth_rules[controller][action] << RoleBasedAuthorization::Rule.new(options[:to], options[:if], options[:object_id])
-      end
-    end  
-  end
-  
-  
-  # Model an authorization rule. A rule is a triplet: <roles, cond, object_id>
-  # a rule match if the user role is in roles and cond (if not nil) is satisfied when objects
-  # are retrieved using object_id.
-  class Rule
-    # rule initialization. roles is mandatory, cond is optional, object_id defaults
-    # to :id if nil.
-    def initialize roles, cond, object_id
-      roles = [roles] unless roles.respond_to? :each
-            
-      @roles = roles
-      @cond = cond
-      @object_id = object_id || :id
-    end
-    
-    # return true if this rule matches the given user and objects
-    def match(user, objects)      
-      AUTHORIZATION_LOGGER.debug('trying '+self.inspect)
-      
-      matching = @roles.include?(:all)
-      
-      # checking for right role (no need to check them if already matching)
-      matching = !@roles.find { |role| !user.nil? && role == user.role }.nil? if !matching
-      
-      if @cond.nil?
-        return matching
-      else
-        # to have a proper match, also the condition must hold
-        return matching && @cond.call(user,objects[@object_id])
-      end
-    end
-    
-    # string representation for this rule
-    def inspect
-      str =  "rule(#{self.object_id}): allow roles [" + @roles.join(',') + "]"
-      str += " (only under condition object_id will be retrieved using '#{@object_id}')" if @cond
-      
-      str
-    end
-  end
-  
-  
   # Returns true if one of the rules defined for this controller matches
   # the given options
   def exists_rule_matching_options? user, controllers, actions, ids

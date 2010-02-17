@@ -111,7 +111,7 @@ module RoleBasedAuthorization
   
   # Returns true if one of the rules defined for this controller matches
   # the given options
-  def exist_rule_matching_options? user, controllers, actions, ids
+  def exists_rule_matching_options? user, controllers, actions, ids
     rules = self.class.role_auth_rules
     AUTHORIZATION_LOGGER.debug("current set of rules: %s" % [rules.inspect])
     
@@ -168,7 +168,7 @@ module RoleBasedAuthorization
           action,
           ids.inspect])
     
-    if exist_rule_matching_options?( user, [controller,'application'], [:all,action] , ids )
+    if exists_rule_matching_options?( user, [controller,'application'], [:all,action] , ids )
       AUTHORIZATION_LOGGER.info('returning true (access granted)')
       return true 
     else      

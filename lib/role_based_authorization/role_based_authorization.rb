@@ -16,24 +16,16 @@ module RoleBasedAuthorization
    end
   end
   
-  # 
-  #
+  # Returns true if one of the rules in rule_for_controller matches the
+  # given options
   def exists_matching_rule_for_this_controller? rules_for_controller, options
-    user     = options[:user]
-    actions  = options[:actions]
-    ids      = options[:ids]
+    user,actions,ids = *options.values_at(:user, :actions, :ids)
     
     actions.find do |action|
-      AUTHORIZATION_LOGGER.debug('current action: %s' % [action])
-      
+      AUTHORIZATION_LOGGER.debug('current action: %s' % [action])      
       action = action.to_sym
-      action_class = action.class
-      raise "Action should be a symbol -- not a #{action_class.name}!" if action_class != Symbol
-      
-      rules_for_action = rules_for_controller && rules_for_controller[action]
-      next if rules_for_action.nil?
-      
-      rules_for_action.find { |rule| rule.match(user, ids) }
+      rules_for_action = rules_for_controller[action]
+      rules_for_action && rules_for_action.find { |rule| rule.match(user, ids) }
     end
   end
     
@@ -49,11 +41,12 @@ module RoleBasedAuthorization
 
       # tries to load the controller. Rails automagically loads classes if their name
       # is used anywhere. By trying to constantize the name of the controller, we
-      # force rails to load it. This causes the insertion of the rules defined therein
-      # into the object pointed by rules_for_controller.      
+      # force rails to load it. Loading the controller class causes the insertion of the rules defined therein
+      # into the object pointed by rules_for_controller.
       (controller.to_s+'_controller').camelize.constantize if( !controller.blank? && rules_for_controller.nil? )
     
-      exists_matching_rule_for_this_controller?(rules_for_controller, options)
+
+      rules_for_controller && exists_matching_rule_for_this_controller?(rules_for_controller, options)
     end
     
     return found_matching_rule
@@ -68,22 +61,16 @@ module RoleBasedAuthorization
       AUTHORIZATION_LOGGER.info("returning false (not logged in)")
       return false
     end
-
-    # Option handling
-    user, ids, controller, action = *opts.values_at(:user, :ids, :controller, :action)
-
-    user       ||= current_user
-    controller ||= controller_name
-    ids        ||= {}
-    ids.reverse_merge!( opts.reject { |key,value| key.to_s !~ /(_id\Z)|(\Aid\Z)/ } )
     
-    AUTHORIZATION_LOGGER.info("user %s requested access to method %s:%s using ids:%s" %
-        [ user && (user.inspect + "(id:#{user.id} role:#{user.role})") || 'none',
-          controller,
-          action,
-          ids.inspect])
+    opts.reverse_merge!( :user => current_user, :controller => controller_name, :ids => {} )
+    opts[:ids].reverse_merge!( opts.reject { |key,value| key.to_s !~ /(_id\Z)|(\Aid\Z)/ } )
+    
+    AUTHORIZATION_LOGGER.info("access request. options: %s" % [opts.inspect])
 
-    if exists_matching_rule?( :user => user, :controllers => [controller,'application'], :actions => [:all,action] , :ids => ids )
+    if exists_matching_rule?( :user         => opts[:user], 
+                              :controllers  => [opts[:controller],'application'], 
+                              :actions      => [:all,opts[:action]] , 
+                              :ids          => opts[:ids] )
       AUTHORIZATION_LOGGER.info('returning true (access granted)')
       return true 
     else      

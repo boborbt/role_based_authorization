@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{role_based_authorization}
-  s.version = "0.1.10"
+  s.version = "0.1.11"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Roberto Esposito"]
-  s.date = %q{2010-02-16}
+  s.date = %q{2010-02-17}
   s.description = %q{Provides a simple DSL for specifying the authorization logic of your application. Install the gem, add a role attribute to your user model and your almost ready to go.}
   s.email = %q{boborbt@gmail.com}
   s.extra_rdoc_files = [

@@ -67,16 +67,15 @@ module RoleBasedAuthorization
     
     AUTHORIZATION_LOGGER.info("access request. options: %s" % [opts.inspect])
 
-    if exists_matching_rule?( :user         => opts[:user], 
-                              :controllers  => [opts[:controller],'application'], 
-                              :actions      => [:all,opts[:action]] , 
-                              :ids          => opts[:ids] )
-      AUTHORIZATION_LOGGER.info('returning true (access granted)')
-      return true 
-    else      
-      AUTHORIZATION_LOGGER.info('returning false (access denied)')
-      return false
-    end
+    new_options = { :user         => opts[:user], 
+                    :controllers  => [opts[:controller],'application'], 
+                    :actions      => [:all,opts[:action]], 
+                    :ids          => opts[:ids] }
+    result = exists_matching_rule?( new_options ) != nil
+                                    
+    AUTHORIZATION_LOGGER.info("returning #{result}")
+
+    result
   end
   
   

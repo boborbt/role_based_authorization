@@ -104,13 +104,32 @@ class RoleBasedAuthorizationTest < ActiveSupport::TestCase
   
   
   test "helper method should work" do 
+    got_inside = false
     @controller.if_authorized?(:action => 'very_low_security') {
-      assert true
+      got_inside = true
     }
+    
+    assert got_inside
+  end
+  
+  test "helper_method should work with paths" do
+    got_inside = false
+    @controller.if_authorized?( '/dummy/very_low_security' ) do
+      got_inside = true
+    end
+    
+    assert got_inside
   end
   
   test "helper_method should work with resource paths even when prefixed with the ActionController::Base.relative_url_root" do
-    assert false
+    ActionController::Base.relative_url_root = '/appname'
+
+    got_inside = false
+    @controller.if_authorized?( '/appname/dummy/very_low_security' ) do
+      got_inside = true
+    end
+    
+    assert got_inside
   end
 
   

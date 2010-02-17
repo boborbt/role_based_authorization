@@ -197,7 +197,7 @@ module RoleBasedAuthorization
   #   if_authorized?( edit_item_path ) { |opts| link_to('yyy', opts) }
   
   def if_authorized? opts, &block
-    cleanup_url_regexp = %r{(\Ahttps?://[^/]*(#{ActionController::Base.relative_url_root})?)}
+    cleanup_url_regexp = %r{(#{ActionController::Base.relative_url_root})?}
     
     url_options = nil
     if opts.class == String

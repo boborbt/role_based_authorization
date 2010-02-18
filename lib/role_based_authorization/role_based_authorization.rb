@@ -33,7 +33,7 @@ module RoleBasedAuthorization
   
   # Returns an hash options amenable to be passed to authorize_action?. It takes either
   # an option hash, or a path string
-  def RoleBasedAuthorization.cleanup_options(opts)
+  def RoleBasedAuthorization.path_or_options_to_options(opts)
     path_cleanup_regexp = %r{(#{ActionController::Base.relative_url_root})?}
        
     url_options = (opts.class == String) && ActionController::Routing::Routes.recognize_path(opts.gsub(path_cleanup_regexp,''))
@@ -112,7 +112,7 @@ module RoleBasedAuthorization
   #   if_authorized?( edit_item_path ) { |opts| link_to('yyy', opts) }
   
   def if_authorized? opts, &block
-    block.call(opts) if authorize_action?(RoleBasedAuthorization.cleanup_options(opts))
+    block.call(opts) if authorize_action?(RoleBasedAuthorization.path_or_options_to_options(opts))
   end
   
   # Returns true if the current user is authorized to perform the current action

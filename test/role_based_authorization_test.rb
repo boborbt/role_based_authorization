@@ -51,7 +51,6 @@ class DummyController < ApplicationController
   
 end
 
-
 class RoleBasedAuthorizationTest < ActiveSupport::TestCase
   def setup
     @controller = DummyController.new
@@ -131,6 +130,50 @@ class RoleBasedAuthorizationTest < ActiveSupport::TestCase
     
     assert got_inside
   end
+  
+  test "path_or_options_to_options should leave untouched the options if they are already there" do
+    options = RoleBasedAuthorization.path_or_options_to_options({:controller => 'dummy', :action => 'very_low_security'})
+    assert_equal 'dummy', options[:controller]
+    assert_equal 'very_low_security', options[:action]
+  end
 
+  test "path_or_options_to_options should work also when paths contain the relative_url_root" do
+    ActionController::Base.relative_url_root = '/test'
+    options = RoleBasedAuthorization.path_or_options_to_options('/test/dummy/very_low_security')
+    assert_equal 'dummy', options[:controller]
+    assert_equal 'very_low_security', options[:action]
+  end
+  
+  test "path_or_options_to_options should work with paths" do
+    options = RoleBasedAuthorization.path_or_options_to_options('/dummy/very_low_security')
+    assert_equal 'dummy', options[:controller]
+    assert_equal 'very_low_security', options[:action]
+  end
+  
+  
+  test "RoleBasedAuthorization.find_matching_rule should return nil if no rule matches"  do
+    rules = { :action1 => mocked_rules([false]*4), 
+              :action2 => mocked_rules([false]*2) }
+    
+    assert_equal nil, RoleBasedAuthorization.find_matching_rule(rules, {:actions => [:action1, :action2, :action3, :action4]})
+  end
+  
+  
+  test "RoleBasedAuthorization.find_matching_rule should not return nil if some rule matches"  do
+    rules = { :action1 => mocked_rules([false]*4), 
+              :action2 => mocked_rules([true, false]) }
+    
+    assert RoleBasedAuthorization.find_matching_rule(rules, {:actions => [:action1, :action2, :action3, :action4]})
+  end
+  
+  
+  private
+  
+  def mocked_rules(values)
+    result = Array.new(values.size) { mock() }
+    result.each_with_index { |rule, index| rule.stubs(:match).returns(values[index]) }
+    result
+  end
+  
   
 end

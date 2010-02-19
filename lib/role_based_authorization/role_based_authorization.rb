@@ -42,13 +42,26 @@ module RoleBasedAuthorization
     url_options
   end
   
+  
+  # cleans options so that they are good to be passed to exists_matching_rule
+  def cleanup_options(opts)
+    opts.reverse_merge!( :user => current_user, :controller => controller_name, :ids => {} )
+    user, controller, action, ids = opts.values_at( :user, :controller, :action, :ids )
+    ids.reverse_merge!( opts.reject { |key,value| key.to_s !~ /(_id\Z)|(\Aid\Z)/ } )
+    
+    { :user         => user, 
+      :controllers  => [controller,'application'], 
+      :actions      => [:all,action], 
+      :ids          => ids }    
+  end
+  
       
   # Returns true if one of the rules defined for this controller matches
   # the given options
   def exists_matching_rule? options
     rules = self.class.role_auth_rules
     
-    return options[:controllers].find do |controller|    
+    found = options[:controllers].find do |controller|
       AUTHORIZATION_LOGGER.debug("current controller: %s" % [controller])
 
       rules_for_controller = rules[controller]
@@ -62,6 +75,8 @@ module RoleBasedAuthorization
 
       rules_for_controller && RoleBasedAuthorization.find_matching_rule(rules_for_controller, options)
     end
+    
+    return !!found  # !! transforms the expression in true/false (e.g., !!nil is exactly the object false)
   end
     
   # Main authorization logic. opts is an hash with the following keys
@@ -71,22 +86,13 @@ module RoleBasedAuthorization
     # exiting immediately if not logged in
     return false if respond_to?(:logged_in?) && !logged_in?
     
-    opts.reverse_merge!( :user => current_user, :controller => controller_name, :ids => {} )
-    user, controller, action, ids = opts.values_at( :user, :controller, :action, :ids )
-    ids.reverse_merge!( opts.reject { |key,value| key.to_s !~ /(_id\Z)|(\Aid\Z)/ } )
-    
-    new_options = { :user         => user, 
-                    :controllers  => [controller,'application'], 
-                    :actions      => [:all,action], 
-                    :ids          => ids }
-                    
-    return exists_matching_rule?( new_options ) != nil
+    exists_matching_rule?( cleanup_options(opts) )
   end
   
   # wraps some logging around do_authorize_action?.
   def authorize_action? opts = {}
     AUTHORIZATION_LOGGER.info("access request. options: %s" % [opts.inspect])
-    result = do_authorize_action? opts
+    result = do_authorize_action?(opts)
     AUTHORIZATION_LOGGER.info("returning #{result}")
     
     return result

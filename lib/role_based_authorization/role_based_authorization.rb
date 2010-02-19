@@ -61,7 +61,8 @@ module RoleBasedAuthorization
   def exists_matching_rule? options
     rules = self.class.role_auth_rules
     
-    found = options[:controllers].find do |controller|
+    # !! is an idiom for transforming any value in true/false (e.g., !!nil is exactly false)
+    !!options[:controllers].find do |controller|
       AUTHORIZATION_LOGGER.debug("current controller: %s" % [controller])
 
       rules_for_controller = rules[controller]
@@ -75,8 +76,6 @@ module RoleBasedAuthorization
 
       rules_for_controller && RoleBasedAuthorization.find_matching_rule(rules_for_controller, options)
     end
-    
-    return !!found  # !! transforms the expression in true/false (e.g., !!nil is exactly the object false)
   end
     
   # Main authorization logic. opts is an hash with the following keys

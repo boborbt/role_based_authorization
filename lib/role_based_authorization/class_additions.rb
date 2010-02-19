@@ -35,8 +35,7 @@ module RoleBasedAuthorization
    #   specifies that :product_id should be used instead of :id.
    
    def permit options 
-     options[:controller] ||= controller_name
-     controller = options[:controller]
+     controller = options[:controller] || controller_name
      actions    = [*options[:actions]]  # create an array if options[:actions] is not already an array
      
      role_auth_rules[controller] ||= {}      
@@ -44,7 +43,7 @@ module RoleBasedAuthorization
      actions.each do |action|
        action = action.to_sym  # this allows for both symbols and strings to be used for action names
        role_auth_rules[controller][action] ||= []
-       role_auth_rules[controller][action] << RoleBasedAuthorization::Rule.new(options[:to], options[:if], options[:object_id])
+       role_auth_rules[controller][action] << RoleBasedAuthorization::Rule.new(*options.values_at(:to,:if,:object_id))
      end
    end  
  end

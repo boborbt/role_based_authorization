@@ -8,7 +8,7 @@ Installation:
 * install the role_based_authorization by issuing:
 	gem install role_based_authorization
   or by adding
-    config.gem "role_based_authorization"
+	config.gem "role_based_authorization"
   to your rails config file and then running 'rake gems:install'
 
   
@@ -102,7 +102,7 @@ This works also if you use resource paths as in:
 	
 == Logging
 
-The authorization system logs each access attempt to RAILS_ROOT/log/authorization.log. If the log level is high enough, you will also view an explanation of what is happening and why.
+The authorization system logs each access attempt to #{Rails.root}/log/authorization.log. If the log level is high enough, you will also view an explanation of what is happening and why.
 
 
 == Examples

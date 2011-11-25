@@ -2,7 +2,7 @@
 module RoleBasedAuthorization
   # AuthorizationLogger instance that is used throughout the plugin for logging
   # events.
-  AUTHORIZATION_LOGGER = AuthorizationLogger.new(File.join(RAILS_ROOT,'log','authorization.log'))  
+  AUTHORIZATION_LOGGER = AuthorizationLogger.new(File.join(Rails.root,'log','authorization.log'))  
     
   # Fires when the module is included into the controllers. It adds all class methods
   # defined in the ClassAdditions sub-module and the authorize_action? and if_authorized?

@@ -1,8 +1,7 @@
-
 module RoleBasedAuthorization
   # AuthorizationLogger instance that is used throughout the plugin for logging
   # events.
-  AUTHORIZATION_LOGGER = AuthorizationLogger.new(File.join(Rails.root,'log','authorization.log'))  
+  AUTHORIZATION_LOGGER = AuthorizationLogger.new(File.join(Rails.root || '.','log','authorization.log'))  
     
   # Fires when the module is included into the controllers. It adds all class methods
   # defined in the ClassAdditions sub-module and the authorize_action? and if_authorized?
@@ -36,7 +35,7 @@ module RoleBasedAuthorization
   def RoleBasedAuthorization.path_or_options_to_options(opts)
     path_cleanup_regexp = %r{(#{ActionController::Base.relative_url_root})?}
        
-    url_options = (opts.class == String) && ActionController::Routing::Routes.recognize_path(opts.gsub(path_cleanup_regexp,''))
+    url_options = (opts.class <= String) && ActionController::Routing::Routes.recognize_path(opts.gsub(path_cleanup_regexp,''))
     url_options ||= opts.dup
     
     url_options

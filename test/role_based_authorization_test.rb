@@ -120,6 +120,22 @@ class RoleBasedAuthorizationTest < ActiveSupport::TestCase
     assert got_inside
   end
   
+  test "helper_method should work with String subclasses" do
+    class MySubstring < String
+      def new_meth
+        0
+      end
+    end
+    
+    got_inside = false
+    @controller.if_authorized?( MySubstring.new('/dummy/very_low_security') ) do
+      got_inside = true
+    end
+    
+    assert got_inside
+  end
+  
+  
   test "helper_method should work with resource paths even when prefixed with the ActionController::Base.relative_url_root" do
     ActionController::Base.relative_url_root = '/appname'
 

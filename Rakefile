@@ -34,8 +34,8 @@ begin
     gemspec.email = "boborbt@gmail.com"
     gemspec.homepage = "http://github.com/boborbt/role_based_authorization"
     gemspec.authors = ["Roberto Esposito"]
-    gemspec.add_dependency('rails', '>= 2.2')
-    gemspec.add_dependency('mocha')
+    gemspec.add_dependency('rails', '~> 2.3')
+    gemspec.add_dependency('mocha', '~> 0')
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: gem install jeweler"

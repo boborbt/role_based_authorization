@@ -35,7 +35,7 @@ module RoleBasedAuthorization
   def RoleBasedAuthorization.path_or_options_to_options(opts)
     path_cleanup_regexp = %r{(#{ActionController::Base.relative_url_root})?}
        
-    url_options = (opts.class <= String) && ActionController::Routing::Routes.recognize_path(opts.gsub(path_cleanup_regexp,''))
+    url_options = (opts.class <= String) && Rails.application.routes.recognize_path(opts.gsub(path_cleanup_regexp,''))
     url_options ||= opts.dup
     
     url_options

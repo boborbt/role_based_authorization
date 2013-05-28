@@ -1,6 +1,6 @@
 require 'rake'
 require 'rake/testtask'
-require 'rake/rdoctask'
+require 'rdoc/task'
 
 desc 'Default: run unit tests.'
 task :default => :test
@@ -34,7 +34,7 @@ begin
     gemspec.email = "boborbt@gmail.com"
     gemspec.homepage = "http://github.com/boborbt/role_based_authorization"
     gemspec.authors = ["Roberto Esposito"]
-    gemspec.add_dependency('rails', '~> 2.3')
+    gemspec.add_dependency('rails', '~> 3')
     gemspec.add_dependency('mocha', '~> 0')
   end
 rescue LoadError

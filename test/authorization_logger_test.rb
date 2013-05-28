@@ -3,7 +3,7 @@ require 'role_based_authorization'
 
 class AuthorizationLoggerTest < ActiveSupport::TestCase
   def setup
-    @logger = AuthorizationLogger.new(nil)
+    @logger = AuthorizationLogger.new('/dev/null')
   end
   
   

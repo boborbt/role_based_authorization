@@ -33,7 +33,7 @@ module RoleBasedAuthorization
   # Returns an hash options amenable to be passed to authorize_action?. It takes either
   # an option hash, or a path string
   def RoleBasedAuthorization.path_or_options_to_options(opts)
-    path_cleanup_regexp = %r{(#{ActionController::Base.relative_url_root})?}
+    path_cleanup_regexp = %r{(#{ENV['RAILS_RELATIVE_URL_ROOT']})?}
        
     url_options = (opts.class <= String) && Rails.application.routes.recognize_path(opts.gsub(path_cleanup_regexp,''))
     url_options ||= opts.dup

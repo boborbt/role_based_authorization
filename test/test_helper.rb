@@ -1,4 +1,7 @@
 require 'rubygems'
+
+ENV['RAILS_RELATIVE_URL_ROOT']='/appname'
+
 gem 'rails', '~>3'
 require 'active_support'
 require 'action_controller'

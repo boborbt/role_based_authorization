@@ -154,7 +154,7 @@ class RoleBasedAuthorizationTest < ActiveSupport::TestCase
   end
 
   test "path_or_options_to_options should work also when paths contain the relative_url_root" do
-    ActionController::Base.relative_url_root = '/test'
+    ENV['RAILS_RELATIVE_URL_ROOT'] = '/test'
     options = RoleBasedAuthorization.path_or_options_to_options('/test/dummy/very_low_security')
     assert_equal 'dummy', options[:controller]
     assert_equal 'very_low_security', options[:action]

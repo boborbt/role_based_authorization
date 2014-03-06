@@ -15,11 +15,16 @@ Installation:
   
 * in your application controller: include the module RoleBasedAuthorization:
 
+
+```ruby
+
         class ApplicationController < ActionController::Base
           [...]
           include RoleBasedAuthorization
           [...]
         end
+```
+
 			
 * in your controller classes: use the permission statements (described below) to grant and deny authorizations to the controller methods.
 
